@@ -1,4 +1,5 @@
 using Microsoft.OpenApi.Models;
+using MYP.API.Middleware;
 using MYP.Application;
 using MYP.Infrastructure;
 
@@ -48,6 +49,9 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+// Global exception handling middleware
+app.UseExceptionHandling();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
