@@ -1,0 +1,6 @@
+@MYP.API_HostAddress = http://localhost:5110
+
+GET {{MYP.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
