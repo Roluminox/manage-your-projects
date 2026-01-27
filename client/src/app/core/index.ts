@@ -9,4 +9,4 @@
 // export * from './interceptors/error.interceptor';
 
 // Services
-// export * from './services/auth.service';
+export * from './services/theme.service';
