@@ -1,0 +1,192 @@
+# ===========================
+# Project Documentation (private)
+# ===========================
+docs/
+.epics/
+CLAUDE.md
+
+# ===========================
+# .NET
+# ===========================
+bin/
+obj/
+out/
+.vs/
+*.user
+*.userosscache
+*.suo
+*.cache
+*.log
+*.nupkg
+project.lock.json
+.nuget/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio
+.vs/
+*.sln.docstates
+*.pidb
+*.svclog
+*.scc
+_UpgradeReport_Files/
+Backup*/
+UpgradeLog*.XML
+*.psess
+*.vsp
+*.vspx
+*.sap
+*.e2e
+AutoTest.Net/
+
+# Rider
+.idea/
+*.sln.iml
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Test Results
+[Tt]est[Rr]esult*/
+*.trx
+*.Coverage
+*.coveragexml
+coverage/
+TestResults/
+
+# NCrunch
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+# ===========================
+# Node.js / Angular
+# ===========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# Angular
+dist/
+tmp/
+.angular/
+.sass-cache/
+*.css.map
+*.js.map
+
+# TypeScript
+*.tsbuildinfo
+
+# ===========================
+# IDE / Editors
+# ===========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# ===========================
+# OS Generated
+# ===========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ===========================
+# Environment / Secrets
+# ===========================
+.env
+.env.local
+.env.*.local
+*.env
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json.example
+
+# Local secrets
+secrets/
+*.pem
+*.key
+*.pfx
+*.cer
+
+# ===========================
+# Docker
+# ===========================
+.docker/
+docker-compose.override.yml
+
+# ===========================
+# Logs
+# ===========================
+logs/
+*.log
+npm-debug.log*
+
+# ===========================
+# Database
+# ===========================
+*.db
+*.sqlite
+*.sqlite3
+*.mdf
+*.ldf
+
+# ===========================
+# Build artifacts
+# ===========================
+publish/
+artifacts/
+
+# ===========================
+# Coverage Reports
+# ===========================
+coverage/
+*.lcov
+.nyc_output/
+coverage-report/
+
+# ===========================
+# Temporary files
+# ===========================
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ===========================
+# Package manager locks (optional - uncomment if you want to commit them)
+# ===========================
+# package-lock.json
+# yarn.lock

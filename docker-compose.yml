@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: myp-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-myp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-myp_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-myp_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-myp} -d ${POSTGRES_DB:-myp_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - myp-network
+
+  # .NET API
+  api:
+    build:
+      context: .
+      dockerfile: src/MYP.API/Dockerfile
+    container_name: myp-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=${POSTGRES_DB:-myp_db};Username=${POSTGRES_USER:-myp};Password=${POSTGRES_PASSWORD:-myp_dev_password}
+      - JwtSettings__Secret=${JWT_SECRET:-super_secret_key_for_development_min_32_chars}
+      - JwtSettings__Issuer=${JWT_ISSUER:-MYP}
+      - JwtSettings__Audience=${JWT_AUDIENCE:-MYP}
+      - JwtSettings__ExpirationInMinutes=15
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - myp-network
+
+  # Angular Frontend
+  client:
+    build:
+      context: .
+      dockerfile: src/myp-client/Dockerfile
+    container_name: myp-client
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+    networks:
+      - myp-network
+
+  # pgAdmin (optional - for database management)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: myp-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@myp.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - myp-network
+    profiles:
+      - tools  # Only starts with: docker-compose --profile tools up
+
+volumes:
+  postgres_data:
+
+networks:
+  myp-network:
+    driver: bridge
