@@ -5,8 +5,8 @@
 // export * from './guards/auth.guard';
 
 // Interceptors
-// export * from './interceptors/auth.interceptor';
-// export * from './interceptors/error.interceptor';
+export * from './interceptors/auth.interceptor';
+export * from './interceptors/error.interceptor';
 
 // Services
 export * from './services/theme.service';
