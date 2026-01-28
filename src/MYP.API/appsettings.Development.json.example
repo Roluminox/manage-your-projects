@@ -1,0 +1,43 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=myp_db;Username=myp;Password=myp_dev_password"
+  },
+  "JwtSettings": {
+    "Secret": "super_secret_key_for_development_only_min_32_characters_long",
+    "Issuer": "MYP",
+    "Audience": "MYP",
+    "ExpirationInMinutes": 60,
+    "RefreshTokenExpirationInDays": 30
+  },
+  "Cors": {
+    "AllowedOrigins": [
+      "http://localhost:4200",
+      "https://localhost:4200"
+    ]
+  },
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Debug",
+      "Override": {
+        "Microsoft": "Information",
+        "Microsoft.EntityFrameworkCore": "Information"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "Console",
+        "Args": {
+          "outputTemplate": "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"
+        }
+      },
+      {
+        "Name": "File",
+        "Args": {
+          "path": "logs/myp-.log",
+          "rollingInterval": "Day",
+          "retainedFileCountLimit": 7
+        }
+      }
+    ]
+  }
+}
