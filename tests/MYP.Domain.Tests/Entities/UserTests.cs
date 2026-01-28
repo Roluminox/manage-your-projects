@@ -16,9 +16,11 @@ public class UserTests
         user.Email.Should().BeEmpty();
         user.Username.Should().BeEmpty();
         user.PasswordHash.Should().BeEmpty();
+        user.DisplayName.Should().BeEmpty();
         user.IsActive.Should().BeTrue();
         user.FirstName.Should().BeNull();
         user.LastName.Should().BeNull();
+        user.AvatarUrl.Should().BeNull();
         user.LastLoginAt.Should().BeNull();
     }
 
@@ -38,8 +40,10 @@ public class UserTests
             Email = email,
             Username = username,
             PasswordHash = "hashedpassword",
+            DisplayName = "Test User",
             FirstName = "John",
             LastName = "Doe",
+            AvatarUrl = "https://example.com/avatar.png",
             IsActive = true,
             CreatedAt = now
         };
@@ -48,8 +52,10 @@ public class UserTests
         user.Id.Should().Be(id);
         user.Email.Should().Be(email);
         user.Username.Should().Be(username);
+        user.DisplayName.Should().Be("Test User");
         user.FirstName.Should().Be("John");
         user.LastName.Should().Be("Doe");
+        user.AvatarUrl.Should().Be("https://example.com/avatar.png");
         user.CreatedAt.Should().Be(now);
     }
 }

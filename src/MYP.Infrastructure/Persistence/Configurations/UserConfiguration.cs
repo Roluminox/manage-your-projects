@@ -24,11 +24,18 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(256);
 
+        builder.Property(u => u.DisplayName)
+            .IsRequired()
+            .HasMaxLength(100);
+
         builder.Property(u => u.FirstName)
             .HasMaxLength(100);
 
         builder.Property(u => u.LastName)
             .HasMaxLength(100);
+
+        builder.Property(u => u.AvatarUrl)
+            .HasMaxLength(500);
 
         builder.HasIndex(u => u.Email)
             .IsUnique();
