@@ -70,8 +70,8 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-// Database migration and seeding (Development only)
-if (app.Environment.IsDevelopment())
+// Database migration and seeding (Development only, not in Testing)
+if (app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
 {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -82,3 +82,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+
+// Make Program accessible for integration tests
+public partial class Program { }
