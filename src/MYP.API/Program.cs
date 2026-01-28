@@ -1,7 +1,9 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using MYP.API.Middleware;
 using MYP.Application;
 using MYP.Infrastructure;
+using MYP.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,5 +69,16 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+// Database migration and seeding (Development only)
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    await context.Database.MigrateAsync();
+    await SeedData.SeedAsync(context, logger);
+}
 
 app.Run();
