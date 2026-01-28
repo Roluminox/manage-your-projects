@@ -1,10 +1,14 @@
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MYP.API.Extensions;
 using MYP.Application.Common.Interfaces;
 using MYP.Domain.Interfaces;
 using MYP.Infrastructure.Identity;
@@ -69,6 +73,27 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 options.AccessTokenExpirationMinutes = 15;
                 options.RefreshTokenExpirationDays = 7;
             });
+
+            // Disable rate limiting by using a very high limit
+            DisableRateLimiting(services);
+        });
+    }
+
+    protected virtual void DisableRateLimiting(IServiceCollection services)
+    {
+        // Remove existing rate limiter and add one with no effective limit
+        var rateLimiterDescriptor = services.FirstOrDefault(d =>
+            d.ServiceType.FullName?.Contains("RateLimiter") == true);
+
+        if (rateLimiterDescriptor != null)
+        {
+            services.Remove(rateLimiterDescriptor);
+        }
+
+        services.AddRateLimiter(options =>
+        {
+            options.AddPolicy(RateLimitingExtensions.AuthRateLimitPolicy, _ =>
+                RateLimitPartition.GetNoLimiter(string.Empty));
         });
     }
 }
