@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   db:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: myp-db
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-myp}
@@ -47,7 +45,7 @@ services:
   client:
     build:
       context: .
-      dockerfile: src/myp-client/Dockerfile
+      dockerfile: client/Dockerfile
     container_name: myp-client
     ports:
       - "4200:80"
