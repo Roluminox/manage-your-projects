@@ -6,13 +6,13 @@ import {
   ValidationErrors,
   Validators
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { AuthFormComponent } from '../../components/auth-form/auth-form.component';
 import { AuthStateService } from '../../services/auth-state.service';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, AuthFormComponent],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
 })

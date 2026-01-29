@@ -1,0 +1,20 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h1>{{ title() }}</h1>
+    <p class="subtitle">{{ subtitle() }}</p>
+
+    @if (error()) {
+      <div class="error-banner" role="alert">
+        {{ error() }}
+      </div>
+    }
+
+    <ng-content></ng-content>
+
+    @if (linkText() && linkRoute()) {
+      <p class="auth-link">
+        {{ linkLabel() }} <a [routerLink]="linkRoute()">{{ linkText() }}</a>
+      </p>
+    }
+  </div>
+</div>
