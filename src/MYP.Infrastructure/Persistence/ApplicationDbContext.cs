@@ -16,6 +16,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IUnitOfWor
     public DbSet<User> Users => Set<User>();
     public DbSet<Snippet> Snippets => Set<Snippet>();
     public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<Project> Projects => Set<Project>();
+    public DbSet<Column> Columns => Set<Column>();
+    public DbSet<TaskItem> TaskItems => Set<TaskItem>();
+    public DbSet<Label> Labels => Set<Label>();
+    public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
