@@ -17,10 +17,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           break;
 
         case 401:
-          errorMessage = 'Your session has expired. Please log in again.';
-          localStorage.removeItem('myp-token');
-          router.navigate(['/auth/login']);
-          break;
+          // 401 errors are handled by authInterceptor with token refresh
+          return throwError(() => error);
 
         case 403:
           errorMessage = 'Access denied. You do not have permission to perform this action.';
