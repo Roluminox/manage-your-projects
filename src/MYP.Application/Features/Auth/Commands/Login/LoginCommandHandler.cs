@@ -50,6 +50,9 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
         var refreshToken = _jwtService.GenerateRefreshToken();
         var expiresAt = _jwtService.GetAccessTokenExpiration();
 
+        // Store refresh token
+        _jwtService.StoreRefreshToken(refreshToken, user.Id);
+
         // Update last login
         user.LastLoginAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);

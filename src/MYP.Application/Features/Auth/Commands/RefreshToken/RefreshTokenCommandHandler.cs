@@ -44,10 +44,16 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             return Result.Failure<AuthResponseDto>("This account has been deactivated.");
         }
 
+        // Revoke old refresh token
+        _jwtService.RevokeRefreshToken(request.RefreshToken);
+
         // Generate new tokens
         var accessToken = _jwtService.GenerateAccessToken(user);
         var refreshToken = _jwtService.GenerateRefreshToken();
         var expiresAt = _jwtService.GetAccessTokenExpiration();
+
+        // Store new refresh token
+        _jwtService.StoreRefreshToken(refreshToken, user.Id);
 
         // Build response
         var userDto = new UserDto(

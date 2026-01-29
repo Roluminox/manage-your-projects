@@ -141,6 +141,60 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>
 
     #endregion
 
+    #region RefreshToken Tests
+
+    [Fact]
+    public async Task RefreshToken_WithValidToken_ShouldReturnNewTokens()
+    {
+        // Arrange
+        using var client = _factory.CreateClient();
+        var email = $"refresh{Guid.NewGuid()}@example.com";
+        var authResponse = await RegisterAndLogin(client, email, "Password1!");
+
+        var refreshRequest = new RefreshTokenRequest(RefreshToken: authResponse.RefreshToken);
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/auth/refresh", refreshRequest);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var content = await response.Content.ReadFromJsonAsync<AuthResponseDto>();
+        content.Should().NotBeNull();
+        content!.AccessToken.Should().NotBeNullOrEmpty();
+        content.RefreshToken.Should().NotBeNullOrEmpty();
+        content.AccessToken.Should().NotBe(authResponse.AccessToken);
+    }
+
+    [Fact]
+    public async Task RefreshToken_WithInvalidToken_ShouldReturnBadRequest()
+    {
+        // Arrange
+        using var client = _factory.CreateClient();
+        var refreshRequest = new RefreshTokenRequest(RefreshToken: "invalid_refresh_token");
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/auth/refresh", refreshRequest);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task RefreshToken_WithEmptyToken_ShouldReturnBadRequest()
+    {
+        // Arrange
+        using var client = _factory.CreateClient();
+        var refreshRequest = new RefreshTokenRequest(RefreshToken: "");
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/auth/refresh", refreshRequest);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    #endregion
+
     #region GetCurrentUser Tests
 
     [Fact]
@@ -222,4 +276,5 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>
     #endregion
 
     private record RegisterResponse(Guid UserId);
+    private record RefreshTokenRequest(string RefreshToken);
 }

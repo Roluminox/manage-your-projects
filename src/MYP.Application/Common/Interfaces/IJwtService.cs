@@ -9,4 +9,6 @@ public interface IJwtService
     DateTime GetAccessTokenExpiration();
     DateTime GetRefreshTokenExpiration();
     Guid? ValidateRefreshToken(string refreshToken);
+    void StoreRefreshToken(string refreshToken, Guid userId);
+    void RevokeRefreshToken(string refreshToken);
 }
