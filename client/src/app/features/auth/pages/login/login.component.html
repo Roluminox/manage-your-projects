@@ -1,0 +1,61 @@
+<div class="login-container">
+  <div class="login-card">
+    <h1>Sign In</h1>
+    <p class="subtitle">Welcome back to Manage Your Projects</p>
+
+    @if (error()) {
+      <div class="error-banner" role="alert">
+        {{ error() }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="you@example.com"
+          [attr.aria-invalid]="emailErrors ? 'true' : null"
+          [attr.aria-describedby]="emailErrors ? 'email-error' : null"
+        />
+        @if (emailErrors) {
+          <span id="email-error" class="field-error">{{ emailErrors }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="Your password"
+          [attr.aria-invalid]="passwordErrors ? 'true' : null"
+          [attr.aria-describedby]="passwordErrors ? 'password-error' : null"
+        />
+        @if (passwordErrors) {
+          <span id="password-error" class="field-error">{{ passwordErrors }}</span>
+        }
+      </div>
+
+      <button
+        type="submit"
+        class="submit-btn"
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          <span class="spinner"></span>
+          Signing in...
+        } @else {
+          Sign In
+        }
+      </button>
+    </form>
+
+    <p class="register-link">
+      Don't have an account? <a routerLink="/auth/register">Create one</a>
+    </p>
+  </div>
+</div>
