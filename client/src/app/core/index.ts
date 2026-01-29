@@ -14,3 +14,4 @@ export * from './models/auth.models';
 // Services
 export * from './services/auth.service';
 export * from './services/theme.service';
+export * from './services/token-storage.service';

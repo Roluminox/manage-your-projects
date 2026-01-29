@@ -1,13 +1,23 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { vi } from 'vitest';
 import { AuthService } from './auth.service';
+import { TokenStorageService } from './token-storage.service';
 import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models/auth.models';
 import { environment } from '../../../environments/environment';
 
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
+  let tokenStorageMock: {
+    getAccessToken: ReturnType<typeof vi.fn>;
+    getRefreshToken: ReturnType<typeof vi.fn>;
+    setTokens: ReturnType<typeof vi.fn>;
+    clearTokens: ReturnType<typeof vi.fn>;
+    hasTokens: ReturnType<typeof vi.fn>;
+    isTokenExpiringSoon: ReturnType<typeof vi.fn>;
+  };
   const apiUrl = `${environment.apiUrl}/auth`;
 
   const mockUser: User = {
@@ -24,14 +34,22 @@ describe('AuthService', () => {
   };
 
   beforeEach(() => {
-    localStorage.clear();
+    tokenStorageMock = {
+      getAccessToken: vi.fn(),
+      getRefreshToken: vi.fn(),
+      setTokens: vi.fn(),
+      clearTokens: vi.fn(),
+      hasTokens: vi.fn(),
+      isTokenExpiringSoon: vi.fn()
+    };
 
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        AuthService
+        AuthService,
+        { provide: TokenStorageService, useValue: tokenStorageMock }
       ]
     });
 
@@ -41,7 +59,6 @@ describe('AuthService', () => {
 
   afterEach(() => {
     httpMock.verify();
-    localStorage.clear();
   });
 
   describe('login', () => {
@@ -53,8 +70,10 @@ describe('AuthService', () => {
 
       service.login(loginRequest).subscribe(response => {
         expect(response).toEqual(mockAuthResponse);
-        expect(localStorage.getItem('myp-token')).toBe('test-access-token');
-        expect(localStorage.getItem('myp-refresh-token')).toBe('test-refresh-token');
+        expect(tokenStorageMock.setTokens).toHaveBeenCalledWith(
+          'test-access-token',
+          'test-refresh-token'
+        );
       });
 
       const req = httpMock.expectOne(`${apiUrl}/login`);
@@ -87,12 +106,14 @@ describe('AuthService', () => {
 
   describe('refreshToken', () => {
     it('should refresh tokens when refresh token exists', () => {
-      localStorage.setItem('myp-refresh-token', 'old-refresh-token');
+      tokenStorageMock.getRefreshToken.mockReturnValue('old-refresh-token');
 
       service.refreshToken().subscribe(response => {
         expect(response).toEqual(mockAuthResponse);
-        expect(localStorage.getItem('myp-token')).toBe('test-access-token');
-        expect(localStorage.getItem('myp-refresh-token')).toBe('test-refresh-token');
+        expect(tokenStorageMock.setTokens).toHaveBeenCalledWith(
+          'test-access-token',
+          'test-refresh-token'
+        );
       });
 
       const req = httpMock.expectOne(`${apiUrl}/refresh`);
@@ -102,6 +123,7 @@ describe('AuthService', () => {
     });
 
     it('should throw error when no refresh token exists', () => {
+      tokenStorageMock.getRefreshToken.mockReturnValue(null);
       expect(() => service.refreshToken()).toThrowError('No refresh token available');
     });
   });
@@ -119,47 +141,45 @@ describe('AuthService', () => {
   });
 
   describe('logout', () => {
-    it('should clear tokens from localStorage', () => {
-      localStorage.setItem('myp-token', 'test-token');
-      localStorage.setItem('myp-refresh-token', 'test-refresh');
-
+    it('should clear tokens', () => {
       service.logout();
-
-      expect(localStorage.getItem('myp-token')).toBeNull();
-      expect(localStorage.getItem('myp-refresh-token')).toBeNull();
+      expect(tokenStorageMock.clearTokens).toHaveBeenCalled();
     });
   });
 
   describe('getAccessToken', () => {
-    it('should return token when it exists', () => {
-      localStorage.setItem('myp-token', 'test-token');
+    it('should delegate to tokenStorage', () => {
+      tokenStorageMock.getAccessToken.mockReturnValue('test-token');
       expect(service.getAccessToken()).toBe('test-token');
-    });
-
-    it('should return null when token does not exist', () => {
-      expect(service.getAccessToken()).toBeNull();
+      expect(tokenStorageMock.getAccessToken).toHaveBeenCalled();
     });
   });
 
   describe('getRefreshToken', () => {
-    it('should return refresh token when it exists', () => {
-      localStorage.setItem('myp-refresh-token', 'test-refresh');
+    it('should delegate to tokenStorage', () => {
+      tokenStorageMock.getRefreshToken.mockReturnValue('test-refresh');
       expect(service.getRefreshToken()).toBe('test-refresh');
-    });
-
-    it('should return null when refresh token does not exist', () => {
-      expect(service.getRefreshToken()).toBeNull();
+      expect(tokenStorageMock.getRefreshToken).toHaveBeenCalled();
     });
   });
 
   describe('isAuthenticated', () => {
-    it('should return true when token exists', () => {
-      localStorage.setItem('myp-token', 'test-token');
+    it('should return true when tokens exist', () => {
+      tokenStorageMock.hasTokens.mockReturnValue(true);
       expect(service.isAuthenticated()).toBe(true);
     });
 
-    it('should return false when token does not exist', () => {
+    it('should return false when no tokens exist', () => {
+      tokenStorageMock.hasTokens.mockReturnValue(false);
       expect(service.isAuthenticated()).toBe(false);
+    });
+  });
+
+  describe('isTokenExpiringSoon', () => {
+    it('should delegate to tokenStorage', () => {
+      tokenStorageMock.isTokenExpiringSoon.mockReturnValue(true);
+      expect(service.isTokenExpiringSoon()).toBe(true);
+      expect(tokenStorageMock.isTokenExpiringSoon).toHaveBeenCalled();
     });
   });
 });

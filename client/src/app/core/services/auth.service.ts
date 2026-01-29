@@ -10,20 +10,19 @@ import {
   RegisterResponse,
   User
 } from '../models/auth.models';
-
-const TOKEN_KEY = 'myp-token';
-const REFRESH_TOKEN_KEY = 'myp-refresh-token';
+import { TokenStorageService } from './token-storage.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly tokenStorage = inject(TokenStorageService);
   private readonly apiUrl = `${environment.apiUrl}/auth`;
 
   login(request: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request).pipe(
-      tap(response => this.storeTokens(response))
+      tap(response => this.tokenStorage.setTokens(response.accessToken, response.refreshToken))
     );
   }
 
@@ -32,14 +31,14 @@ export class AuthService {
   }
 
   refreshToken(): Observable<AuthResponse> {
-    const refreshToken = this.getRefreshToken();
+    const refreshToken = this.tokenStorage.getRefreshToken();
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
 
     const request: RefreshTokenRequest = { refreshToken };
     return this.http.post<AuthResponse>(`${this.apiUrl}/refresh`, request).pipe(
-      tap(response => this.storeTokens(response))
+      tap(response => this.tokenStorage.setTokens(response.accessToken, response.refreshToken))
     );
   }
 
@@ -48,28 +47,22 @@ export class AuthService {
   }
 
   logout(): void {
-    this.clearTokens();
+    this.tokenStorage.clearTokens();
   }
 
   getAccessToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+    return this.tokenStorage.getAccessToken();
   }
 
   getRefreshToken(): string | null {
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
+    return this.tokenStorage.getRefreshToken();
   }
 
   isAuthenticated(): boolean {
-    return !!this.getAccessToken();
+    return this.tokenStorage.hasTokens();
   }
 
-  private storeTokens(response: AuthResponse): void {
-    localStorage.setItem(TOKEN_KEY, response.accessToken);
-    localStorage.setItem(REFRESH_TOKEN_KEY, response.refreshToken);
-  }
-
-  private clearTokens(): void {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  isTokenExpiringSoon(): boolean {
+    return this.tokenStorage.isTokenExpiringSoon();
   }
 }
