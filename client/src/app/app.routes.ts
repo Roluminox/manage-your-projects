@@ -31,6 +31,11 @@ export const routes: Routes = [
         path: '',
         loadComponent: () =>
           import('./features/dashboard/pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      {
+        path: 'snippets',
+        loadChildren: () =>
+          import('./features/snippets/snippets.routes').then(m => m.SNIPPETS_ROUTES)
       }
     ]
   },
