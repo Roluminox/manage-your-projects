@@ -36,6 +36,11 @@ export const routes: Routes = [
         path: 'snippets',
         loadChildren: () =>
           import('./features/snippets/snippets.routes').then(m => m.SNIPPETS_ROUTES)
+      },
+      {
+        path: 'projects',
+        loadChildren: () =>
+          import('./features/kanban/kanban.routes').then(m => m.KANBAN_ROUTES)
       }
     ]
   },
