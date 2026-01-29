@@ -1,0 +1,101 @@
+<div class="register-container">
+  <div class="register-card">
+    <h1>Create Account</h1>
+    <p class="subtitle">Join Manage Your Projects today</p>
+
+    @if (error()) {
+      <div class="error-banner" role="alert">
+        {{ error() }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="you@example.com"
+          [attr.aria-invalid]="emailErrors ? 'true' : null"
+        />
+        @if (emailErrors) {
+          <span class="field-error">{{ emailErrors }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          type="text"
+          formControlName="username"
+          placeholder="johndoe"
+          [attr.aria-invalid]="usernameErrors ? 'true' : null"
+        />
+        @if (usernameErrors) {
+          <span class="field-error">{{ usernameErrors }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="displayName">Display Name</label>
+        <input
+          id="displayName"
+          type="text"
+          formControlName="displayName"
+          placeholder="John Doe"
+          [attr.aria-invalid]="displayNameErrors ? 'true' : null"
+        />
+        @if (displayNameErrors) {
+          <span class="field-error">{{ displayNameErrors }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="Min 8 chars, uppercase, digit, special"
+          [attr.aria-invalid]="passwordErrors ? 'true' : null"
+        />
+        @if (passwordErrors) {
+          <span class="field-error">{{ passwordErrors }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          formControlName="confirmPassword"
+          placeholder="Repeat your password"
+          [attr.aria-invalid]="confirmPasswordErrors ? 'true' : null"
+        />
+        @if (confirmPasswordErrors) {
+          <span class="field-error">{{ confirmPasswordErrors }}</span>
+        }
+      </div>
+
+      <button
+        type="submit"
+        class="submit-btn"
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          <span class="spinner"></span>
+          Creating account...
+        } @else {
+          Create Account
+        }
+      </button>
+    </form>
+
+    <p class="login-link">
+      Already have an account? <a routerLink="/auth/login">Sign in</a>
+    </p>
+  </div>
+</div>
