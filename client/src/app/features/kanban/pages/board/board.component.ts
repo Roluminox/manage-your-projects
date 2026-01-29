@@ -3,19 +3,21 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { KanbanStateService } from '../../services/kanban-state.service';
+import { TaskDetailModalComponent } from '../../components/task-detail-modal/task-detail-modal.component';
 import {
   Column,
   CreateColumnRequest,
   CreateTaskRequest,
   Priority,
   PRIORITY_LABELS,
-  PRIORITY_COLORS
+  PRIORITY_COLORS,
+  UpdateTaskRequest
 } from '../../models/kanban.models';
 
 @Component({
   selector: 'app-board',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TaskDetailModalComponent],
   template: `
     <div class="board-page">
       <header class="board-header">
@@ -193,6 +195,20 @@ import {
             }
           </div>
         </div>
+      }
+
+      <!-- Task Detail Modal -->
+      @if (state.selectedTask()) {
+        <app-task-detail-modal
+          [task]="state.selectedTask()"
+          (close)="closeTaskDetail()"
+          (update)="onUpdateTask($event)"
+          (deleteTask)="onDeleteTask()"
+          (archiveTask)="onArchiveTask($event)"
+          (addChecklistItemEvent)="onAddChecklistItem($event)"
+          (toggleChecklistItem)="onToggleChecklistItem($event)"
+          (deleteChecklistItem)="onDeleteChecklistItem($event)"
+        />
       }
     </div>
   `,
@@ -653,6 +669,48 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   openTaskDetail(taskId: string): void {
     this.state.loadTaskById(taskId);
+  }
+
+  closeTaskDetail(): void {
+    this.state.clearSelectedTask();
+  }
+
+  onUpdateTask(request: UpdateTaskRequest): void {
+    const task = this.state.selectedTask();
+    if (task) {
+      this.state.updateTask(task.id, request);
+    }
+  }
+
+  onDeleteTask(): void {
+    const task = this.state.selectedTask();
+    if (task) {
+      this.state.deleteTask(task.id);
+      this.closeTaskDetail();
+    }
+  }
+
+  onArchiveTask(archive: boolean): void {
+    const task = this.state.selectedTask();
+    if (task) {
+      this.state.archiveTask(task.id, archive);
+      this.closeTaskDetail();
+    }
+  }
+
+  onAddChecklistItem(text: string): void {
+    const task = this.state.selectedTask();
+    if (task) {
+      this.state.addChecklistItem(task.id, { text });
+    }
+  }
+
+  onToggleChecklistItem(checklistId: string): void {
+    this.state.toggleChecklistItem(checklistId);
+  }
+
+  onDeleteChecklistItem(checklistId: string): void {
+    this.state.deleteChecklistItem(checklistId);
   }
 
   getPriorityLabel(priority: Priority): string {
