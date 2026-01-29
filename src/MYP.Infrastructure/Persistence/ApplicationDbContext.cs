@@ -14,6 +14,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext, IUnitOfWor
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Snippet> Snippets => Set<Snippet>();
+    public DbSet<Tag> Tags => Set<Tag>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
