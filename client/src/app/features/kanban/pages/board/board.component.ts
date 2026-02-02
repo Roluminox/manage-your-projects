@@ -2,6 +2,13 @@ import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import {
+  CdkDragDrop,
+  CdkDrag,
+  CdkDropList,
+  moveItemInArray,
+  transferArrayItem
+} from '@angular/cdk/drag-drop';
 import { KanbanStateService } from '../../services/kanban-state.service';
 import { TaskDetailModalComponent } from '../../components/task-detail-modal/task-detail-modal.component';
 import {
@@ -11,13 +18,14 @@ import {
   Priority,
   PRIORITY_LABELS,
   PRIORITY_COLORS,
+  TaskItem,
   UpdateTaskRequest
 } from '../../models/kanban.models';
 
 @Component({
   selector: 'app-board',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TaskDetailModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TaskDetailModalComponent, CdkDropList, CdkDrag],
   template: `
     <div class="board-page">
       <header class="board-header">
@@ -117,40 +125,51 @@ import {
                     </div>
                   }
 
-                  <div class="tasks-list">
-                    @for (task of column.tasks; track task.id) {
-                      @if (!task.isArchived) {
-                        <div class="task-card" (click)="openTaskDetail(task.id)">
-                          <div class="task-title">{{ task.title }}</div>
-                          @if (task.description) {
-                            <div class="task-description">{{ task.description }}</div>
-                          }
-                          <div class="task-meta">
-                            <span
-                              class="priority-badge"
-                              [style.background-color]="getPriorityColor(task.priority)"
-                            >
-                              {{ getPriorityLabel(task.priority) }}
+                  <div
+                    class="tasks-list"
+                    cdkDropList
+                    [cdkDropListData]="getActiveTasks(column)"
+                    [id]="'column-' + column.id"
+                    [cdkDropListConnectedTo]="getConnectedDropLists()"
+                    (cdkDropListDropped)="onTaskDrop($event, column.id)"
+                  >
+                    @for (task of getActiveTasks(column); track task.id) {
+                      <div
+                        class="task-card"
+                        cdkDrag
+                        [cdkDragData]="task"
+                        (click)="openTaskDetail(task.id)"
+                      >
+                        <div class="task-drag-placeholder" *cdkDragPlaceholder></div>
+                        <div class="task-title">{{ task.title }}</div>
+                        @if (task.description) {
+                          <div class="task-description">{{ task.description }}</div>
+                        }
+                        <div class="task-meta">
+                          <span
+                            class="priority-badge"
+                            [style.background-color]="getPriorityColor(task.priority)"
+                          >
+                            {{ getPriorityLabel(task.priority) }}
+                          </span>
+                          @if (task.dueDate) {
+                            <span class="due-date" [class.overdue]="isOverdue(task.dueDate)">
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                              </svg>
+                              {{ task.dueDate | date:'shortDate' }}
                             </span>
-                            @if (task.dueDate) {
-                              <span class="due-date" [class.overdue]="isOverdue(task.dueDate)">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                                </svg>
-                                {{ task.dueDate | date:'shortDate' }}
-                              </span>
-                            }
-                            @if (task.checklists.length > 0) {
-                              <span class="checklist-count">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                {{ getCompletedChecklists(task) }}/{{ task.checklists.length }}
-                              </span>
-                            }
-                          </div>
+                          }
+                          @if (task.checklists.length > 0) {
+                            <span class="checklist-count">
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {{ getCompletedChecklists(task) }}/{{ task.checklists.length }}
+                            </span>
+                          }
                         </div>
-                      }
+                      </div>
                     }
                   </div>
                 </div>
@@ -595,6 +614,39 @@ import {
       height: 3rem;
       margin-bottom: 1rem;
     }
+
+    /* Drag & Drop Styles */
+    .tasks-list.cdk-drop-list-dragging .task-card:not(.cdk-drag-placeholder) {
+      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+    }
+
+    .task-card.cdk-drag-preview {
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+      border-color: var(--primary, #6366f1);
+      background: var(--bg-card, #ffffff);
+      transform: rotate(3deg);
+    }
+
+    .task-card.cdk-drag-animating {
+      transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+    }
+
+    .task-drag-placeholder {
+      background: var(--bg-secondary, #f1f5f9);
+      border: 2px dashed var(--primary, #6366f1);
+      border-radius: 0.375rem;
+      min-height: 60px;
+      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+    }
+
+    .tasks-list {
+      min-height: 50px;
+    }
+
+    .cdk-drop-list-receiving {
+      background: color-mix(in srgb, var(--primary, #6366f1) 5%, transparent);
+      border-radius: 0.375rem;
+    }
   `]
 })
 export class BoardComponent implements OnInit, OnDestroy {
@@ -727,5 +779,30 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   getCompletedChecklists(task: { checklists: { isCompleted: boolean }[] }): number {
     return task.checklists.filter(c => c.isCompleted).length;
+  }
+
+  // Drag & Drop methods
+  getActiveTasks(column: Column): TaskItem[] {
+    return column.tasks.filter(t => !t.isArchived);
+  }
+
+  getConnectedDropLists(): string[] {
+    return this.state.columns().map(col => 'column-' + col.id);
+  }
+
+  onTaskDrop(event: CdkDragDrop<TaskItem[]>, columnId: string): void {
+    const task = event.item.data as TaskItem;
+
+    if (event.previousContainer === event.container) {
+      // Reorder within the same column
+      const tasks = [...event.container.data];
+      moveItemInArray(tasks, event.previousIndex, event.currentIndex);
+      const taskIds = tasks.map(t => t.id);
+      this.state.reorderTasks(columnId, taskIds);
+    } else {
+      // Move to a different column
+      const sourceColumnId = event.previousContainer.id.replace('column-', '');
+      this.state.moveTask(task.id, columnId, event.currentIndex);
+    }
   }
 }
