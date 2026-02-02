@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { BoardComponent } from './board.component';
 import { KanbanStateService } from '../../services/kanban-state.service';
 import { Column, Priority, Project, ProjectSummary, TaskItem } from '../../models/kanban.models';
@@ -54,7 +55,9 @@ describe('BoardComponent', () => {
       createTask: vi.fn(),
       loadTaskById: vi.fn(),
       clearSelectedProject: vi.fn(),
-      clearError: vi.fn()
+      clearError: vi.fn(),
+      moveTask: vi.fn(),
+      reorderTasks: vi.fn()
     };
 
     await TestBed.configureTestingModule({
@@ -258,5 +261,158 @@ describe('BoardComponent', () => {
     const emptyBoard = fixture.nativeElement.querySelector('.empty-board');
     expect(emptyBoard).toBeTruthy();
     expect(emptyBoard.textContent).toContain('No columns yet');
+  });
+
+  // Drag & Drop Tests (TASK-03-206)
+  describe('Drag & Drop Operations', () => {
+    const mockTask2: TaskItem = {
+      id: 'task-2',
+      title: 'Test Task 2',
+      description: undefined,
+      priority: Priority.High,
+      order: 1,
+      isArchived: false,
+      createdAt: '2024-01-02T00:00:00Z',
+      labels: [],
+      checklists: []
+    };
+
+    const mockArchivedTask: TaskItem = {
+      id: 'task-3',
+      title: 'Archived Task',
+      description: undefined,
+      priority: Priority.Low,
+      order: 2,
+      isArchived: true,
+      createdAt: '2024-01-03T00:00:00Z',
+      labels: [],
+      checklists: []
+    };
+
+    const mockColumn2: Column = {
+      id: 'column-2',
+      name: 'In Progress',
+      order: 1,
+      tasks: []
+    };
+
+    it('should filter out archived tasks from active tasks', () => {
+      const columnWithArchived: Column = {
+        ...mockColumn,
+        tasks: [mockTask, mockTask2, mockArchivedTask]
+      };
+
+      (stateServiceMock.selectedProject as any).set({
+        ...mockProject,
+        columns: [columnWithArchived]
+      });
+      (stateServiceMock.columns as any).set([columnWithArchived]);
+      fixture.detectChanges();
+
+      const activeTasks = component.getActiveTasks(columnWithArchived);
+      expect(activeTasks.length).toBe(2);
+      expect(activeTasks.map(t => t.id)).toEqual(['task-1', 'task-2']);
+    });
+
+    it('should return correct connected drop lists', () => {
+      (stateServiceMock.selectedProject as any).set({
+        ...mockProject,
+        columns: [mockColumn, mockColumn2]
+      });
+      (stateServiceMock.columns as any).set([mockColumn, mockColumn2]);
+      fixture.detectChanges();
+
+      const connectedLists = component.getConnectedDropLists();
+      expect(connectedLists).toEqual(['column-column-1', 'column-column-2']);
+    });
+
+    it('should call reorderTasks when dropping task in same column', () => {
+      (stateServiceMock.selectedProject as any).set({
+        ...mockProject,
+        columns: [{ ...mockColumn, tasks: [mockTask, mockTask2] }]
+      });
+      (stateServiceMock.columns as any).set([{ ...mockColumn, tasks: [mockTask, mockTask2] }]);
+      fixture.detectChanges();
+
+      // Same container reference for same column reorder
+      const sameContainer = { id: 'column-column-1', data: [mockTask, mockTask2] };
+      const mockDropEvent = {
+        previousContainer: sameContainer,
+        container: sameContainer,
+        previousIndex: 0,
+        currentIndex: 1,
+        item: { data: mockTask }
+      } as unknown as CdkDragDrop<TaskItem[]>;
+
+      component.onTaskDrop(mockDropEvent, 'column-1');
+
+      expect(stateServiceMock.reorderTasks).toHaveBeenCalledWith('column-1', ['task-2', 'task-1']);
+    });
+
+    it('should call moveTask when dropping task in different column', () => {
+      (stateServiceMock.selectedProject as any).set({
+        ...mockProject,
+        columns: [mockColumn, mockColumn2]
+      });
+      (stateServiceMock.columns as any).set([mockColumn, mockColumn2]);
+      fixture.detectChanges();
+
+      const sourceContainer = { id: 'column-column-1', data: [mockTask] };
+      const targetContainer = { id: 'column-column-2', data: [] };
+
+      const mockDropEvent = {
+        previousContainer: sourceContainer,
+        container: targetContainer,
+        previousIndex: 0,
+        currentIndex: 0,
+        item: { data: mockTask }
+      } as unknown as CdkDragDrop<TaskItem[]>;
+
+      component.onTaskDrop(mockDropEvent, 'column-2');
+
+      expect(stateServiceMock.moveTask).toHaveBeenCalledWith('task-1', 'column-2', 0);
+    });
+
+    it('should not call reorderTasks when moving task to different column', () => {
+      const sourceContainer = { id: 'column-column-1', data: [mockTask] };
+      const targetContainer = { id: 'column-column-2', data: [] };
+
+      const mockDropEvent = {
+        previousContainer: sourceContainer,
+        container: targetContainer,
+        previousIndex: 0,
+        currentIndex: 0,
+        item: { data: mockTask }
+      } as unknown as CdkDragDrop<TaskItem[]>;
+
+      component.onTaskDrop(mockDropEvent, 'column-2');
+
+      expect(stateServiceMock.reorderTasks).not.toHaveBeenCalled();
+    });
+
+    it('should render drop list elements with correct IDs', () => {
+      (stateServiceMock.selectedProject as any).set({
+        ...mockProject,
+        columns: [mockColumn, mockColumn2]
+      });
+      (stateServiceMock.columns as any).set([mockColumn, mockColumn2]);
+      fixture.detectChanges();
+
+      const dropLists = fixture.nativeElement.querySelectorAll('[cdkDropList]');
+      expect(dropLists.length).toBe(2);
+      expect(dropLists[0].id).toBe('column-column-1');
+      expect(dropLists[1].id).toBe('column-column-2');
+    });
+
+    it('should render task cards with cdkDrag directive', () => {
+      (stateServiceMock.selectedProject as any).set(mockProject);
+      (stateServiceMock.columns as any).set(mockProject.columns);
+      fixture.detectChanges();
+
+      const taskCards = fixture.nativeElement.querySelectorAll('.task-card');
+      expect(taskCards.length).toBe(1);
+      // Task cards should be draggable
+      expect(taskCards[0].hasAttribute('cdkdrag') || taskCards[0].classList.contains('cdk-drag')).toBe(true);
+    });
   });
 });

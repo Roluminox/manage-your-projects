@@ -6,6 +6,7 @@ import {
   CdkDragDrop,
   CdkDrag,
   CdkDropList,
+  CdkDragPlaceholder,
   moveItemInArray,
   transferArrayItem
 } from '@angular/cdk/drag-drop';
@@ -25,7 +26,7 @@ import {
 @Component({
   selector: 'app-board',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TaskDetailModalComponent, CdkDropList, CdkDrag],
+  imports: [CommonModule, FormsModule, RouterLink, TaskDetailModalComponent, CdkDropList, CdkDrag, CdkDragPlaceholder],
   template: `
     <div class="board-page">
       <header class="board-header">
