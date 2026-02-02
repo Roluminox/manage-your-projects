@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthFormComponent } from '../../components/auth-form/auth-form.component';
 import { AuthStateService } from '../../services/auth-state.service';
@@ -10,9 +10,13 @@ import { AuthStateService } from '../../services/auth-state.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authState = inject(AuthStateService);
+
+  ngOnInit(): void {
+    this.authState.clearError();
+  }
 
   readonly loading = this.authState.loading;
   readonly error = this.authState.error;

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -16,9 +16,13 @@ import { AuthStateService } from '../../services/auth-state.service';
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authState = inject(AuthStateService);
+
+  ngOnInit(): void {
+    this.authState.clearError();
+  }
 
   readonly loading = this.authState.loading;
   readonly error = this.authState.error;
