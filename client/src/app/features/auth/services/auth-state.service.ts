@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, finalize, of, tap } from 'rxjs';
+import { catchError, finalize, firstValueFrom, of, tap } from 'rxjs';
 import { AuthService, LoginRequest, RegisterRequest, User } from '../../../core';
 
 @Injectable({
@@ -22,7 +22,7 @@ export class AuthStateService {
 
   readonly isAuthenticated = computed(() => this.userSignal() !== null);
 
-  initialize(): void {
+  async initialize(): Promise<void> {
     if (this.initializedSignal()) {
       return;
     }
@@ -33,18 +33,15 @@ export class AuthStateService {
     }
 
     this.loadingSignal.set(true);
-    this.authService.getCurrentUser().pipe(
-      tap(user => {
-        this.userSignal.set(user);
-        this.initializedSignal.set(true);
-      }),
-      catchError(() => {
-        this.authService.logout();
-        this.initializedSignal.set(true);
-        return of(null);
-      }),
-      finalize(() => this.loadingSignal.set(false))
-    ).subscribe();
+    try {
+      const user = await firstValueFrom(this.authService.getCurrentUser());
+      this.userSignal.set(user);
+    } catch {
+      this.authService.logout();
+    } finally {
+      this.initializedSignal.set(true);
+      this.loadingSignal.set(false);
+    }
   }
 
   login(request: LoginRequest): void {
