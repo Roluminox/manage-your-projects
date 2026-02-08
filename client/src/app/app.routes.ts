@@ -41,6 +41,11 @@ export const routes: Routes = [
         path: 'projects',
         loadChildren: () =>
           import('./features/kanban/kanban.routes').then(m => m.KANBAN_ROUTES)
+      },
+      {
+        path: 'audit',
+        loadChildren: () =>
+          import('./features/audit/audit.routes').then(m => m.AUDIT_ROUTES)
       }
     ]
   },
