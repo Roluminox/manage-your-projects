@@ -19,6 +19,7 @@ public class TestDbContext : DbContext, IApplicationDbContext
     public DbSet<TaskItem> TaskItems => Set<TaskItem>();
     public DbSet<Label> Labels => Set<Label>();
     public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -90,6 +91,15 @@ public class TestDbContext : DbContext, IApplicationDbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Text).IsRequired().HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EntityType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId);
         });
     }
 
