@@ -13,6 +13,7 @@ using MYP.Application.Common.Interfaces;
 using MYP.Domain.Interfaces;
 using MYP.Infrastructure.Identity;
 using MYP.Infrastructure.Persistence;
+using MYP.Infrastructure.Persistence.Interceptors;
 
 namespace MYP.API.Tests.Common;
 
@@ -51,11 +52,12 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 .BuildServiceProvider();
 
             // Add in-memory database for testing
+            services.AddScoped<AuditableEntityInterceptor>();
             services.AddDbContext<ApplicationDbContext>((sp, options) =>
             {
                 options.UseInMemoryDatabase(_dbName);
                 options.ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
-                options.UseInternalServiceProvider(efServiceProvider);
+                options.AddInterceptors(sp.GetRequiredService<AuditableEntityInterceptor>());
             });
 
             services.AddScoped<IApplicationDbContext>(provider =>
