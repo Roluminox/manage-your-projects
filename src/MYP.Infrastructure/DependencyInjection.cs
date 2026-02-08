@@ -8,6 +8,7 @@ using MYP.Application.Common.Interfaces;
 using MYP.Domain.Interfaces;
 using MYP.Infrastructure.Identity;
 using MYP.Infrastructure.Persistence;
+using MYP.Infrastructure.Persistence.Interceptors;
 
 namespace MYP.Infrastructure;
 
@@ -17,11 +18,16 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // Interceptors
+        services.AddScoped<AuditableEntityInterceptor>();
+
         // Database - only register if not already registered (for testing scenarios)
         if (!services.Any(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>)))
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<ApplicationDbContext>((sp, options) =>
+                options
+                    .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+                    .AddInterceptors(sp.GetRequiredService<AuditableEntityInterceptor>()));
         }
 
         // Only register if not already registered
